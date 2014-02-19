@@ -122,6 +122,7 @@ class MadMimi
   end
 
   # Not the most elegant, but it works for now. :)
+  # You should use add_user with an array
   def add_users_to_list(list_name, arr)
     arr.each do |a|
       a[:add_list] = list_name
@@ -250,16 +251,28 @@ class MadMimi
     end
   end
 
-  def build_csv(hash)
+  def build_csv(data)
     if CSV.respond_to?(:generate_row)   # before Ruby 1.9
       buffer = ''
-      CSV.generate_row(hash.keys, hash.keys.size, buffer)
-      CSV.generate_row(hash.values, hash.values.size, buffer)
+      if data.is_a?(Array)
+        CSV.generate_row(data.keys, data.keys.size, buffer)
+        data.each {|user| CSV.generate_row(user.values, user.values.size, buffer) }
+      else
+        CSV.generate_row(data.keys, data.keys.size, buffer)
+        CSV.generate_row(data.values, data.values.size, buffer)
+      end
       buffer
     else                               # Ruby 1.9 and after
       CSV.generate do |csv|
-        csv << hash.keys
-        csv << hash.values
+        if data.is_a?(Array)
+          csv << data.first.keys
+          data.each do |user|
+            csv << user.values
+          end
+        else
+          csv << data.keys
+          csv << data.values
+        end
       end
     end
   end
